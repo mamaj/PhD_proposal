@@ -1,0 +1,106 @@
+\chapter{Entropy-based Lossy Compression} \label{chap-3}
+
+\section{Problem Definition}
+
+Let us consider the following general lossy compression setup:
+
+\begin{equation}
+    X \xrightarrow{\enc(T|X)} T \xrightarrow{\dec(Y|T)} Y
+\end{equation}
+
+where input $X$ with marginal distribution $P_X$ is encoded using the probabilistic encoder $\enc$ to generate code $T$. In turn, the probabilistic decoder $\dec$ reconstructs $Y$ from the code $T$. The goal is to find the encoder and decoder that minimize the expected code length $H(T)$, given a distortion constraint on $Y$. It is common to measure the sample-wise distortion via direct comparison of $(x, y)$ pairs through a distortion function $d(\cdot, \cdot)$, and consider the expectation as a notion of overall distortion, $\ex \left[ d(X,Y)  \right]$. Instead, we will consider log-loss $H(X|Y)$ as an alternative to enforce distortion constraint. Therefore, the optimization problem can be stated as follows:
+
+\begin{equation}
+\begin{aligned} \label{eq:no_const}
+    \min_{\enc, \dec} \ &H(T)\\
+    \textrm{s.t.} \ &H(X|Y) \leq \theta
+\end{aligned}
+\end{equation}
+
+It is easy to see the optimal solution of (\ref{eq:no_const}) happens when $T=Y$, i.e. the identity decoder. To overcome this we constrain the output marginal distribution:
+
+\begin{equation}
+\begin{aligned} \label{eq:no_const}
+    \min_{\enc, \dec} \ &H(T) \\
+    \textrm{s.t.} \ &H(X|Y) \leq \theta \\
+    &P(Y) = P_Y
+\end{aligned}
+\end{equation}
+
+or equivalently:
+
+\begin{equation} 
+\begin{aligned} \label{eq:general}
+    \min_{\enc, \dec} \ &H(T) - \beta I(X;Y) \\
+    \textrm{s.t.} \ &P(Y) = P_Y
+\end{aligned}
+\end{equation}
+
+An special case of (\ref{eq:general}) is when the code bottleneck is removed, i.e. $\beta \to \infty$. In this case, $X=T$ and the optimization becomes:
+
+\begin{equation} 
+\begin{aligned} \label{eq:maxmutual}
+    \max_{\enc} \ &I(X;Y) \\
+    \textrm{s.t.} \ &P(Y) = P_Y \\
+\end{aligned}
+\end{equation}
+
+That is, finding the probabilistic pairing between the marginals $P_X$ and $P_Y$ in order to maximize the mutual information. We refer to (\ref{eq:maxmutual}) as the \textit{Maximum Information Matching} problem.
+
+
+\section{Maximum Information Matching}
+
+Consider two random variables $X$ and $Y$, over alphabets $\mathcal{X}$ and $\mathcal{Y}$ with probability mass functions $P_X$ and $P_Y$, respectively. The goal of Maximum Information Matching is to find the joint probability mass function $P_{XY}$ that maximizes the mutual information $I(X;Y)$, or equivalently minimizes the joint entropy $H(X;Y)$:
+
+\begin{equation} 
+\begin{aligned} \label{eq:minent}
+    \min_{P_{XY}} \ &H(X;Y) \\
+    \textrm{s.t.} \
+        &\sum_{y\in\mathcal{Y}} P_{XY}(x, y) = P_X(x) \quad \forall x\in{\mathcal{X}},  \\
+        &\sum_{x\in\mathcal{X}} P_{XY}(x, y) = P_Y(y) \quad \forall y\in{\mathcal{Y}}
+\end{aligned}
+\end{equation}
+
+This is a concave minimization problem over a standard polyhedron. Therefore, every vertex of the polyhedron is a local minimum and the global minimum happens at a subset of the vertices.
+
+Note that an standard polyhedron is defined as $\mathcal{P}=\{\bm{x} \in \reals^n | \ \bm{A}\bm{x} = \bm{b}, \ \bm{x} \geq \bm{0}\}$, where $\bm{A} \in \reals ^{m \times n}$ with linearly independent rows. A point $\bm{x}^* \in \mathcal{P}$ is a vertex if and only if it has $n-m$ zero elements and columns of $\bm{A}$ corresponding to other $m$ non-zero elements are linearly independent. Hence, to exhaustively iterate all the vertices:
+\begin{enumerate}
+    \item Choose $m$ linearly independent columns $\bm{A}_{\pi(1)}, \cdots, \bm{A}_{\pi(1)}$.
+    \item Let $\bm{x}_i= 0$ for all  $i \in \pi(1),..., \pi(m)$
+    \item Solve the system of $m$ equations $\bm{A}\bm{x} - \bm{b}$ for the unknowns $\bm{x}_\pi(1), \cdots, \bm{x}_\pi(m)$
+\end{enumerate}
+
+Therefore a crude upper-bound on the number of vertices would be ${n \choose m}$. This is enhanced by [] to ${n-m/2 \choose m/2}$ which is still exponential in $m$. Next, we will show that Maximum Information Matching problem as defined in (\ref{eq:minent}) is NP-Hard.
+
+
+Approximate algorithm: Successive Linearization Algorithm (SLA)
+\begin{enumerate}
+    \item Pick any $\bm{x}_0 \in \mathcal{P}$
+    \item Solve linear program $x_{i+1} = \arg\min \nabla f(x_i)^{\top}(x-x_i), \ \ \ x \in \mathcal{P}$
+    \item If $\arg\min \nabla f(x_i)(x-x_i) = 0$ stop, otherwise go to step 2.
+\end{enumerate}
+
+It can be shown that $f(x_0) > f(x_1) > … >f(x_i)$.
+
+**Greedy Method 1 (max-seeking):**
+
+1. Select $i = \argmax P_x(X=i),  j=\argmax P_y(Y=j)$
+2. update $P_{xy}(X=i, Y=j) = \min\{P_x(i), P_y(j)\}$
+3. update marginals.
+4. Continue until marginals are zero.
+
+**Greedy Method 2 (Zero-seeking):**
+
+1. select pair of (i, j) such that $|P_x(i)-P_y(j)|$ is minimized. In case of a draw, pick pairs with larger marginals.
+2. update $P_{xy}(X=i, Y=j) = \min\{P_x(i), P_y(j)\}$
+3. update marginals.
+4. Continue until marginals are zero.
+
+
+
+
+\section{Outcomes}
+
+\section{Future Plans}
+
+
