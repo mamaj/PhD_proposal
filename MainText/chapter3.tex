@@ -36,7 +36,7 @@ or equivalently:
 \end{aligned}
 \end{equation}
 
-An special case of (\ref{eq:general}) is when the code bottleneck is removed, i.e. $\beta \to \infty$. In this case, $X=T$ and the optimization becomes:
+A special case of (\ref{eq:general}) is when the code bottleneck is removed, i.e. $\beta \to \infty$. In this case, $X=T$ and the optimization becomes:
 
 \begin{equation} 
 \begin{aligned} \label{eq:maxmutual}
@@ -70,37 +70,62 @@ Note that an standard polyhedron is defined as $\mathcal{P}=\{\bm{x} \in \reals^
     \item Solve the system of $m$ equations $\bm{A}\bm{x} - \bm{b}$ for the unknowns $\bm{x}_\pi(1), \cdots, \bm{x}_\pi(m)$
 \end{enumerate}
 
-Therefore a crude upper-bound on the number of vertices would be ${n \choose m}$. This is enhanced by [] to ${n-m/2 \choose m/2}$ which is still exponential in $m$. Next, we will show that Maximum Information Matching problem as defined in (\ref{eq:minent}) is NP-Hard.
+Therefore a crude upper-bound on the number of vertices would be ${n \choose m}$. This is enhanced by [] to ${n-m/2 \choose m/2}$ which is still exponential in $m$. 
+Next, we will show that Maximum Information Matching problem as defined in (\ref{eq:minent}) is essentially NP-Hard. This is done by reduction from another NP-complete problem, $k$-Subset-Sum.
 
+\begin{remark} Maximum Information Matching problem of (\ref{eq:minent}) is NP-Hard.
+\end{remark}
+\begin{proof}
+To show an optimization problem is NP-Hard, we need to show the corresponding decision problem is NP-Hard.  Given an optimization problem, a decision version is whether or not any target value $T$ is achievable. Without the loss of generality, assume $\mathcal{X} > \mathcal{Y}$. We set $T=H(Y)$, i.e. to decide if there exists a function $f: \mathcal{X}\to\mathcal{Y}$ such that $Y=f(X)$. Let's call this problem \textit{Deterministic Matching}.
 
-Approximate algorithm: Successive Linearization Algorithm (SLA)
-\begin{enumerate}
-    \item Pick any $\bm{x}_0 \in \mathcal{P}$
-    \item Solve linear program $x_{i+1} = \arg\min \nabla f(x_i)^{\top}(x-x_i), \ \ \ x \in \mathcal{P}$
-    \item If $\arg\min \nabla f(x_i)(x-x_i) = 0$ stop, otherwise go to step 2.
-\end{enumerate}
+Next, we show any instance of the $k$-Subset-Sum problem can be reduced to an instance of Deterministic Matching, by a polynomial-time procedure. Consider a general instance of the $k$-Subset-Sum problem: Given set $\mathcal{S}$ of integers and target values $\{t_i|1\leq i\leq k\}$, decide if there exists a partition $\{\mathcal{S}_i|1\leq i\leq k \}$ of size $k$ on $\mathcal{S}$ such that $\sum \mathcal{S}_i = t_i$ for all $1\leq i\leq k$. 
+Now, set $P_X(i)=s_i/\sum(\mathcal{S}), \forall s_i \in \mathcal{S}$ and $P_Y(i)=t_i / \sum(t_j)$. Then, clearly solving Deterministic Matching for $P_X, P_Y$ will solve the original $k$-Subset-Sum problem. Therefore, $k$-Subset-Sum  $<_p$ Deterministic Matching and hence, Deterministic Matching is NP-Hard. Consequently, Maximum Information Matching is a NP-Hard optimization problem.
+\end{proof}
 
-It can be shown that $f(x_0) > f(x_1) > … >f(x_i)$.
+Finally, we introduce two linear-time approximate greedy algorithms for Maximum Information Matching problem, and numerically compare their achieved minima to a general approximate algorithm.
 
-**Greedy Method 1 (max-seeking):**
+\RestyleAlgo{ruled}
+\begin{algorithm}[H]
+$P_{XY}(x, y) \gets 0, \quad \forall x, y \in \mathcal{X}, \mathcal{Y}$ \; 
+\While{marginals $P_X, P_Y \neq \bm{0}$}{
+  $x^* \gets \argmax_{x} P_X(x)$ \;
+  $y^* \gets \argmax_{y} P_Y(y)$ \;
+  $P_{XY}(x^*, y^*) = \min\{P_X(x^*), P_Y(y^*)\}$ \;
+  $P_X(x^*) \gets  P_X(x^*) - \min\{P_X(x^*), P_Y(y^*)\}$ \;
+  $P_Y(y^*) \gets  P_Y(y^*) - \min\{P_X(x^*), P_Y(y^*)\}$ \;
+ }
+ \caption{Max-Seeking Greedy}
+\end{algorithm}
 
-1. Select $i = \argmax P_x(X=i),  j=\argmax P_y(Y=j)$
-2. update $P_{xy}(X=i, Y=j) = \min\{P_x(i), P_y(j)\}$
-3. update marginals.
-4. Continue until marginals are zero.
+\RestyleAlgo{ruled}
+\begin{algorithm}[H]
+$P_{XY}(x, y) \gets 0, \quad \forall x, y \in \mathcal{X}, \mathcal{Y}$ \; 
+\While{marginals $P_X, P_Y \neq \bm{0}$}{
+  $(x^*, y^*) \gets \argmin_{x, y}|P_X(x)-P_Y(y)|$ \;
+%   (break ties by picking the largest marginal) \\
+  $P_{XY}(x^*, y^*) = \min\{P_X(x^*), P_Y(y^*)\}$ \;
+  $P_X(x^*) \gets  P_X(x^*) - \min\{P_X(x^*), P_Y(y^*)\}$ \;
+  $P_Y(y^*) \gets  P_Y(y^*) - \min\{P_X(x^*), P_Y(y^*)\}$ \;
+}
+\caption{Zero-Seeking Greedy}
+\end{algorithm}
 
-**Greedy Method 2 (Zero-seeking):**
+As a simple baseline, we randomly generated 100 pairs of joint distributions and fed them to our greedy solvers. We also used a general concave minimization method, Successive Linearization Algorithm (SLA), and compared the achieved joint entropy. Table \ref{table:maxIresult} summarizes the average joint entropy over 100 trials for each method.
 
-1. select pair of (i, j) such that $|P_x(i)-P_y(j)|$ is minimized. In case of a draw, pick pairs with larger marginals.
-2. update $P_{xy}(X=i, Y=j) = \min\{P_x(i), P_y(j)\}$
-3. update marginals.
-4. Continue until marginals are zero.
-
-
-
-
-\section{Outcomes}
-
-\section{Future Plans}
+\begin{table}[h]
+\center
+\caption{Maximum Information Matching: average achieved joint entropy of 100 simulations of marginal distributions.}
+\begin{tabular}{ |c|c| }
+ \hline
+ Name & Entropy  \\ 
+ \hline
+ Independent Joint & $5.443 \pm 0.101$  \\ 
+ SLA & $3.225 \pm 0.141$\\ 
+ Max-Seeking Greedy & $2.946 \pm 0.064$\\
+ Zero-Seeking Greedy & $2.937 \pm 0.058$\\
+ \hline
+\end{tabular}
+\label{table:maxIresult}
+\end{table}
 
 

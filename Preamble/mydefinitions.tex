@@ -41,6 +41,7 @@
 \usepackage{hyperref}       % hyperlinks
 \usepackage{url}            % simple URL typesetting
 \usepackage{booktabs}       % professional-quality tables
+\usepackage{algorithm2e}[ruled]
 % \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 % \usepackage{microtype}      % microtypography
 \hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor = blue}
@@ -66,7 +67,10 @@
 \end{minipage}  } \end{center}
 }
 
-
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{remark}[theorem]{Remark}
 %----------------------------------------------------------------------------------------
 %	YOUR DEFINITIONS AND COMMANDS
 %----------------------------------------------------------------------------------------
@@ -119,3 +123,9 @@
 % \def\dec{P_\text{dec}}
 \def\enc{p}
 \def\dec{q}
+
+
+\newcommand{\argmin}{\operatornamewithlimits{argmin}}
+\newcommand{\argmax}{\operatornamewithlimits{argmax}}
+\DeclareMathOperator{\var}{Var}
+\DeclareMathOperator{\chidist}{chi}
